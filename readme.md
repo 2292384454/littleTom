@@ -19,7 +19,7 @@ littleTom
 │  littleTom.iml
 │  pom.xml
 │  readme.md
-│    
+│      
 ├─src
 │  ├─main
 │  │  ├─java
@@ -34,11 +34,10 @@ littleTom
 │  └─test
 │      ├─java
 │      └─resources
-│          ├─logs
-│          │      kittyHTTPServerLog.log
-│          │      RequestProcessorLog.log
-│          │      
-│          └─staticHTML
+│          └─logs
+│                  kittyHTTPServerLog.log
+│                  RequestProcessorLog.log
+│                  
 └─target
     ├─classes
     │      HTTPServer.class

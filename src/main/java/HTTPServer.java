@@ -16,11 +16,26 @@ import java.util.concurrent.Executors;
  * @author KevinHwang
  */
 public class HTTPServer {
-    private final static Logger logger = LogManager.getLogger("HTTPServerLog");//日志工具
-    private static final int NUM_THREADS = 50;//最大线程数
-    private static final String INDEX_FILE = "index.html";//主页文件
-    private final File rootDirectory;//网站根目录
-    private final int port;//监听端口
+    /**
+     * 日志工具
+     */
+    private final static Logger logger = LogManager.getLogger("HTTPServerLog");
+    /**
+     * 最大线程数
+     */
+    private static final int NUM_THREADS = 50;
+    /**
+     * 主页文件
+     */
+    private static final String INDEX_FILE = "index.html";
+    /**
+     * 网站根目录
+     */
+    private final File rootDirectory;
+    /**
+     * 监听端口
+     */
+    private final int port;
 
     /**
      * 指定网站根目录和监听端口的构造方法.
@@ -43,6 +58,7 @@ public class HTTPServer {
      * @throws IOException 如果实例化ServerSocket失败，抛出该异常。
      */
     public void start() throws IOException {
+        // TODO:自定义线程池，避免 FixedThreadPool 的队列无限扩张导致内存耗尽的问题
         ExecutorService pool = Executors.newFixedThreadPool(NUM_THREADS);
         try (ServerSocket server = new ServerSocket(port)) {
             logger.info("Accepting connections on port " + server.getLocalPort());
@@ -51,6 +67,7 @@ public class HTTPServer {
             while (true) {
                 try {
                     Socket request = server.accept();
+                    // 每接收到一个连接请求，就向线程池里添加一个线程处理
                     pool.submit(new RequestProcessor(rootDirectory, INDEX_FILE, request));
                 } catch (IOException e) {
                     logger.error("Error accepting connection", e);
@@ -65,26 +82,10 @@ public class HTTPServer {
      * @param args 输入参数
      */
     public static void main(String[] args) {
-//        //得到文档根
-//        File docroot;
-//        try {
-//            docroot = new File(args[0]);
-//        } catch (ArrayIndexOutOfBoundsException e) {
-//            System.out.println("Usage: java littleTom docroot port.");
-//            return;
-//        }
-//        //设置要监听的端口
-//        int port;
-//        try {
-//            port = Integer.parseInt(args[1]);
-//            if (port < 0 || port > 65565) port = 80;
-//        } catch (RuntimeException e) {
-//            port = 80;
-//        }
-        File docroot = new File("src/main/webapp/");
+        File docRoot = new File("src/main/webapp/");
         int port = 80;
         try {
-            HTTPServer webserver = new HTTPServer(docroot, port);
+            HTTPServer webserver = new HTTPServer(docRoot, port);
             webserver.start();
         } catch (IOException e) {
             logger.error("Server couldn't start.", e);

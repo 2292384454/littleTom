@@ -1,2 +1,4 @@
-INFO  2021-05-17 04:24:03.067 [main] - Accepting connections on port 80
-INFO  2021-05-17 04:24:03.069 [main] - Document Root: src\main\webapp
+ERROR 2021-07-02 11:41:03.347 [main] - Server couldn't start.
+java.io.IOException: src\main\webasapp does not exists as a directory.
+	at HTTPServer.<init>(HTTPServer.java:49) ~[classes/:?]
+	at HTTPServer.main(HTTPServer.java:88) [classes/:?]

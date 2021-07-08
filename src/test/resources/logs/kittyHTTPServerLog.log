@@ -1,4 +1,0 @@
-ERROR 2021-07-02 11:41:03.347 [main] - Server couldn't start.
-java.io.IOException: src\main\webasapp does not exists as a directory.
-	at HTTPServer.<init>(HTTPServer.java:49) ~[classes/:?]
-	at HTTPServer.main(HTTPServer.java:88) [classes/:?]

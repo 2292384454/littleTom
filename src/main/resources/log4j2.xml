@@ -19,11 +19,11 @@
                     pattern="%-5level %d{yyyy-MM-dd hh:mm:ss.SSS} [%t] %logger{36} - %msg%n"/>
         </Console>
         <!--文件会打印出所有信息到src/kittyHTTPServer/kittyHTTPServerLog.log，这个log每次运行程序会自动清空，由append属性决定-->
-        <File name="ServerLogFile" fileName="src/test/resources/logs/kittyHTTPServerLog.log" append="false">
+        <File name="ServerLogFile" fileName="src/main/logs/HTTPServerLog.log" append="false">
             <PatternLayout pattern="%-5level %d{yyyy-MM-dd hh:mm:ss.SSS} [%t] - %msg%n"/>
         </File>
         <!--文件会打印出所有信息到src/kittyHTTPServer/RequestProcessorLog.log，这个log每次运行程序会自动清空，由append属性决定-->
-        <File name="RequestLogFile" fileName="src/test/resources/logs/RequestProcessorLog.log" append="false">
+        <File name="RequestLogFile" fileName="src/main/logs/RequestProcessorLog.log" append="false">
             <PatternLayout pattern="%-5level %d{yyyy-MM-dd hh:mm:ss.SSS} [%t] - %msg%n"/>
         </File>
     </Appenders>

@@ -1,10 +1,10 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import utils.HTTPHeader;
+import utils.MimeMapper;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Date;
 
@@ -31,8 +31,11 @@ public class RequestProcessor implements Runnable {
     /**
      * 要处理的Socket
      */
-
     private final Socket connection;
+    /**
+     * 使用的MimeMapper
+     */
+    private final static MimeMapper MIME_MAPPER = MimeMapper.getMapper();
 
     /**
      * 构造方法.
@@ -67,52 +70,38 @@ public class RequestProcessor implements Runnable {
             //用于输出文本
             Writer out = new OutputStreamWriter(raw);
             //接收HTTP输入
-            Reader in = new InputStreamReader(new BufferedInputStream(connection.getInputStream()), StandardCharsets.US_ASCII);
-            //请求行
-            StringBuilder requestLine = new StringBuilder();
-            for (int c; (c = in.read()) != -1 && c != '\n' && c != '\r'; ) {
-                requestLine.append((char) c);
+            InputStream inputStream = new BufferedInputStream(connection.getInputStream());
+
+            StringBuilder sb = new StringBuilder();
+            //读请求头
+            for (int read; (read = inputStream.read()) != -1; ) {
+                sb.append((char) read);
+                if (sb.toString().endsWith("\r\n\r\n")) {
+                    break;
+                }
             }
+            //请求头
+            HTTPHeader header = new HTTPHeader(sb.toString());
             //请求行
-            String get = requestLine.toString();
-            logger.info(connection.getRemoteSocketAddress() + " \"" + get + "\"");
-            //"\s+"则表示匹配任意多个空白字符，包括空格、制表符、换页符等等，等价于[\f\n\r\t\v]
-            String[] tokends = get.split("\\s+");
+            String requestLine = header.getRequestLine();
+            logger.info(connection.getRemoteSocketAddress() + " \"" + requestLine + "\"");
             //请求方法
-            String method = tokends[0];
+            String method = header.getRequestMethod();
             //协议版本
             String version = "";
             /*处理GET或者HEAD方法*/
-            if (method.equals("GET") || method.equals("HEAD")) {
+            if ("GET".equals(method) || "HEAD".equals(method)) {
                 //请求文件名。对含有参数的url抛弃参数只返回'?'之前的文件路径
-                String fileName = tokends[1].split("\\?")[0];
+                String fileName = header.getRequestURI().split("\\?")[0];
                 if (fileName.endsWith("/")) {
                     fileName += indexFileName;
                 }
-                // Files.probeContentType()方法比URLConnection.getFileNameMap().getContentTypeFor()方法更全面
-//                String contentType = Files.probeContentType(Paths.get(rootDirectory + fileName.substring(1)));//响应内容的MIME格式
-                //响应内容的MIME格式
-                String contentType = URLConnection.getFileNameMap().getContentTypeFor(fileName);
-                // 补充一些getFileNameMap中没有的MIME格式
-                // 参考： https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-                if (contentType == null) {
-                    if (fileName.endsWith(".css")) {
-                        contentType = "text/css";
-                    } else if (fileName.endsWith(".js")) {
-                        contentType = "application/json";
-                    } else if (fileName.endsWith(".gif")) {
-                        contentType = "image/gif";
-                    } else if (fileName.endsWith(".woff")) {
-                        contentType = "font/woff";
-                    } else if (fileName.endsWith(".woff2")) {
-                        contentType = "font/woff2";
-                    }
+                String[] strs = fileName.split("\\.");
+                String contentType = MIME_MAPPER.get(strs[strs.length - 1]);
+                if (header.getRequestVersion() != null) {
+                    version = header.getRequestVersion();
                 }
-
-                if (tokends.length > 2) {
-                    version = tokends[2];
-                }
-                //substring(1)去掉第一个'/'，找到客户端请求的文件
+                //substring(1)去掉第一个'/'，找到客户端请求的文件的完整路径
                 File theFile = new File(rootDirectory, fileName.substring(1));
                 if (theFile.canRead()
                         //不要让客户端超出文档根之外
@@ -123,7 +112,7 @@ public class RequestProcessor implements Runnable {
                         sendHeader(out, "HTTP/1.0 200 OK", contentType, theData.length);
                     }
                     /*处理GET方法*/
-                    if (method.equals("GET")) {
+                    if ("GET".equals(method)) {
                         //发送文件，这可能是一个图像或者其他二进制数据，
                         //所以要用底层输出流，而不是writer
                         raw.write(theData);
@@ -142,15 +131,16 @@ public class RequestProcessor implements Runnable {
                         sendHeader(out, "HTTP/1.0 404 Not Found", "text/html; charset=utf-8", body.length());
                     }
                     /*处理GET方法*/
-                    if (method.equals("GET")) {
+                    if ("GET".equals(method)) {
                         out.write(body);
                         out.flush();
                     }
                 }
             } else {
                 //除了GET和HEAD的其他方法
-                if (tokends.length > 2)
-                    version = tokends[2];
+                if (header.getRequestVersion() != null) {
+                    version = header.getRequestVersion();
+                }
                 String body = "<HTML>\r\n" +
                         "<HEAD><TITLE>Not Implemented</TITLE>\r\n" +
                         "</HEAD>\r\n" +

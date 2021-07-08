@@ -1,0 +1,10 @@
+<config>
+    <!-- littleTom采用线程池处理HTTP连接，NUM_THREADS 指定线程池中最大线程数 -->
+    <num_threads>1000000</num_threads>
+    <!-- 主页文件名 -->
+    <index_file>index.html</index_file>
+    <!-- 网站目录 -->
+    <rootDirectory>src/main/webapp/</rootDirectory>
+    <!-- 监听端口 -->
+    <port>8090</port>
+</config>
